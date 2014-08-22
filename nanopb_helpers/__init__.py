@@ -68,6 +68,8 @@ def compile_nanopb(proto_path):
                                                        '.pb')])
         header = tempdir.files('*.h')[0].bytes()
         source = tempdir.files('*.c')[0].bytes()
+        source = source.replace(proto_path.namebase + '.pb.h',
+                                '{{ header_path }}')
     finally:
         tempdir.rmtree()
     return {'header': header, 'source': source}
