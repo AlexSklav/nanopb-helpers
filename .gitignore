@@ -6,3 +6,5 @@ RELEASE-VERSION
 setup.py
 *~
 *.swp
+build
+dist
