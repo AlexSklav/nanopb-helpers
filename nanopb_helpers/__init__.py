@@ -37,19 +37,26 @@ def get_exe_postfix():
     raise 'Unsupported platform: %s' % platform.system()
 
 
-def get_nanopb_bin_dir():
+def get_nanopb_root():
     '''
-    Return the path to the `nanopb` binary directory for the current platform.
+    Return the path to the `nanopb` root directory for the current platform.
     '''
     system_strs = {'Linux': 'linux', 'Windows': 'windows', 'Darwin': 'macosx'}
     if platform.system() not in system_strs:
         raise 'Unsupported platform: %s' % platform.system()
-    return get_base_path().joinpath('bin', 'nanopb-0.2.9-%s-x86' %
-                                    system_strs[platform.system()],
-                                    'generator-bin')
+    system_str = system_strs[platform.system()]
+    return get_base_path().joinpath('bin').dirs('nanopb-*-%s-*' %
+                                                system_str)[0]
 
 
-def compile_nanopb(proto_path):
+def get_nanopb_bin_dir():
+    '''
+    Return the path to the `nanopb` binary directory for the current platform.
+    '''
+    return get_nanopb_root().joinpath('generator-bin')
+
+
+def compile_nanopb(proto_path, options_file=None):
     '''
     Compile specified Protocol Buffer file to [`Nanopb`][1] "plain-`C`" code.
 
@@ -59,13 +66,18 @@ def compile_nanopb(proto_path):
     nanopb_bin_dir = get_nanopb_bin_dir()
     tempdir = path(tempfile.mkdtemp(prefix='nanopb'))
     try:
-        protoc = nanopb_bin_dir.joinpath('protoc' + get_exe_postfix())
+        #protoc = nanopb_bin_dir.joinpath('protoc' + get_exe_postfix())
+        protoc = path('/usr').joinpath('bin', 'protoc' + get_exe_postfix())
         nanopb_generator = nanopb_bin_dir.joinpath('nanopb_generator' +
                                                    get_exe_postfix())
         check_call([protoc, '-I%s' % proto_path.parent, proto_path,
                     '-o%s' % (tempdir.joinpath(proto_path.namebase + '.pb'))])
-        check_call([nanopb_generator, tempdir.joinpath(proto_path.namebase +
-                                                       '.pb')])
+        nanopb_gen_cmd = [nanopb_generator,
+                          tempdir.joinpath(proto_path.namebase + '.pb')]
+        if options_file is not None:
+            nanopb_gen_cmd += ['-f%s' % options_file]
+        check_call(nanopb_gen_cmd)
+        print ' '.join(nanopb_gen_cmd)
         header = tempdir.files('*.h')[0].bytes()
         source = tempdir.files('*.c')[0].bytes()
         source = source.replace(proto_path.namebase + '.pb.h',
@@ -87,7 +99,8 @@ def compile_pb(proto_path):
     tempdir = path(tempfile.mkdtemp(prefix='nanopb'))
     result = {}
     try:
-        protoc = nanopb_bin_dir.joinpath('protoc' + get_exe_postfix())
+        #protoc = nanopb_bin_dir.joinpath('protoc' + get_exe_postfix())
+        protoc = path('/usr').joinpath('bin', 'protoc' + get_exe_postfix())
         check_call([protoc, '-I%s' % proto_path.parent, proto_path,
                     '--python_out=%s' % tempdir, '--cpp_out=%s' % tempdir])
         result['python'] = tempdir.files('*.py')[0].bytes()
