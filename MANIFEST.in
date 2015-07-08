@@ -5,3 +5,6 @@ include pavement.py
 include paver-minilib.zip
 include setup.py
 include finddata.py
+recursive-include nanopb_helpers *
+recursive-exclude nanopb_helpers *.pyc
+recursive-exclude nanopb_helpers *.o

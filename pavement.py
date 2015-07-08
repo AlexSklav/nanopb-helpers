@@ -1,6 +1,5 @@
 from paver.easy import task, needs
 from paver.setuputils import setup
-from finddata import find_package_data
 
 import version
 
@@ -14,7 +13,7 @@ setup(name='nanopb_helpers',
       license='GPLv2',
       install_requires=['path_helpers'],
       packages=['nanopb_helpers', 'nanopb_helpers.bin'],
-      package_data=find_package_data())
+      include_package_data=True)
 
 
 @task

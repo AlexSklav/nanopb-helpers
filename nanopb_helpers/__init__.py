@@ -66,8 +66,7 @@ def compile_nanopb(proto_path, options_file=None):
     nanopb_bin_dir = get_nanopb_bin_dir()
     tempdir = path(tempfile.mkdtemp(prefix='nanopb'))
     try:
-        #protoc = nanopb_bin_dir.joinpath('protoc' + get_exe_postfix())
-        protoc = path('/usr').joinpath('bin', 'protoc' + get_exe_postfix())
+        protoc = nanopb_bin_dir.joinpath('protoc' + get_exe_postfix())
         nanopb_generator = nanopb_bin_dir.joinpath('nanopb_generator' +
                                                    get_exe_postfix())
         check_call([protoc, '-I%s' % proto_path.parent, proto_path,
@@ -99,8 +98,7 @@ def compile_pb(proto_path):
     tempdir = path(tempfile.mkdtemp(prefix='nanopb'))
     result = {}
     try:
-        #protoc = nanopb_bin_dir.joinpath('protoc' + get_exe_postfix())
-        protoc = path('/usr').joinpath('bin', 'protoc' + get_exe_postfix())
+        protoc = nanopb_bin_dir.joinpath('protoc' + get_exe_postfix())
         check_call([protoc, '-I%s' % proto_path.parent, proto_path,
                     '--python_out=%s' % tempdir, '--cpp_out=%s' % tempdir])
         result['python'] = tempdir.files('*.py')[0].bytes()
