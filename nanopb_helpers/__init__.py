@@ -49,6 +49,14 @@ def get_nanopb_root():
                                                 system_str)[0]
 
 
+def get_sources():
+    return get_nanopb_root().files('*.c*')
+
+
+def get_includes():
+    return [get_base_path().joinpath('include'), get_nanopb_root()]
+
+
 def get_nanopb_bin_dir():
     '''
     Return the path to the `nanopb` binary directory for the current platform.
