@@ -80,7 +80,6 @@ private:
     do {
       pb_type_t type;
       pb_size_t count = 0;
-      pb_size_t target_count = 0;
       type = iter.source.pos->type;
 
       /* TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO */
@@ -93,9 +92,13 @@ private:
 
       if (PB_ATYPE(type) == PB_ATYPE_STATIC) {
         count = extract_count(iter.source);
-        target_count = extract_count(iter.target);
+#ifdef LOGGING
+        pb_size_t target_count = extract_count(iter.target);
+#endif  // #ifdef LOGGING
 
+#ifdef LOGGING
         int size = -10;
+#endif  // #ifdef LOGGING
         /* If the `process_field` method returns `true`... */
         if (process_field(iter, count)) {
           /*  - Copy data from source structure to target structure. */
@@ -105,12 +108,18 @@ private:
            *    structure. */
           if (PB_HTYPE(type) == PB_HTYPE_OPTIONAL) {
             *(bool*)iter.target.pSize = *(bool*)iter.source.pSize;
+#ifdef LOGGING
             size = *(bool*)iter.target.pSize;
+#endif  // #ifdef LOGGING
           } else if (PB_HTYPE(type) == PB_HTYPE_REPEATED) {
             *(pb_size_t*)iter.target.pSize = *(pb_size_t*)iter.source.pSize;
+#ifdef LOGGING
             size = *(pb_size_t*)iter.target.pSize;
+#endif  // #ifdef LOGGING
           } else {
+#ifdef LOGGING
             size = -20;
+#endif  // #ifdef LOGGING
           }
         }
         LOG(">> source_count=%d, target_count=%d (size: %d, LTYPE=%d)\n",
@@ -145,7 +154,9 @@ private:
           --parent_count;
         }
         count = extract_count(iter.source);
+#ifdef LOGGING
         target_count = extract_count(iter.target);
+#endif  // #ifdef LOGGING
         LOG("<< source_count=%d, target_count=%d\n", count, target_count);
       } else {
         LOG("Unrecognized PB_ATYPE=%d\n", PB_ATYPE(type));
