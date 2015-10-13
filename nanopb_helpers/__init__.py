@@ -26,6 +26,17 @@ def get_base_path():
     return path(__file__).parent.abspath()
 
 
+def package_path():
+    return path(__file__).parent
+
+
+def get_lib_directory():
+    '''
+    Return directory containing the Arduino library headers.
+    '''
+    return package_path().joinpath('Arduino', 'library')
+
+
 def get_exe_postfix():
     '''
     Return the file extension for executable files.
