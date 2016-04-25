@@ -45,6 +45,7 @@ inline Msg get_pb_default(const pb_field_t *fields) {
    * which cannot be referenced in a memory efficient, generalizable way. */
   Msg obj;
   UInt8Array null_array;
+  null_array.data = NULL;
   null_array.length = 0;
   decode_from_array(null_array, fields, obj, true);
   return obj;

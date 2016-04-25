@@ -17,7 +17,7 @@ eeprom_update_block (const void *__src, void *__dst, size_t __n) {
 
 namespace nanopb {
 
-inline UInt8Array eeprom_to_array(uint16_t address, UInt8Array output) {
+inline UInt8Array eeprom_to_array(uint32_t address, UInt8Array output) {
   uint16_t payload_size;
 
   eeprom_read_block((void*)&payload_size, (void*)address, sizeof(uint16_t));
@@ -32,7 +32,7 @@ inline UInt8Array eeprom_to_array(uint16_t address, UInt8Array output) {
 }
 
 
-inline void array_to_eeprom(uint16_t address, UInt8Array data) {
+inline void array_to_eeprom(uint32_t address, UInt8Array data) {
   cli();
   eeprom_update_block((void*)&data.length, (void*)address, sizeof(uint16_t));
   eeprom_update_block((void*)data.data, (void*)(address + 2), data.length);
@@ -41,7 +41,7 @@ inline void array_to_eeprom(uint16_t address, UInt8Array data) {
 
 
 template <typename Obj, typename Fields>
-bool decode_obj_from_eeprom(uint16_t address, Obj &obj,
+bool decode_obj_from_eeprom(uint32_t address, Obj &obj,
                             Fields const &fields, UInt8Array pb_buffer) {
   pb_buffer = eeprom_to_array(address, pb_buffer);
   bool ok;
