@@ -16,10 +16,38 @@ See [license][3] for more info.
 [2]: http://koti.kapsi.fi/~jpa/nanopb/download/
 [3]: https://code.google.com/p/nanopb/source/browse/LICENSE.txt
 '''
+import os
 import platform
+import sys
 import tempfile
-from subprocess import check_call
+
 from path_helpers import path
+from subprocess import check_call
+import path_helpers as ph
+
+
+def conda_prefix():
+    '''
+    Returns
+    -------
+    path_helpers.path
+        Path to Conda environment prefix corresponding to running Python
+        executable.
+
+        Return ``None`` if not running in a Conda environment.
+    '''
+    if any(['continuum analytics, inc.' in sys.version.lower(),
+            'conda' in sys.version.lower()]):
+        # Assume running under Conda.
+        if 'CONDA_PREFIX' in os.environ:
+            conda_prefix = ph.path(os.environ['CONDA_PREFIX'])
+        else:
+            # Infer Conda prefix as parent directory of Python executable.
+            conda_prefix = ph.path(sys.executable).parent.realpath()
+    else:
+        # Assume running under Conda.
+        conda_prefix = None
+    return conda_prefix
 
 
 def get_base_path():
@@ -48,16 +76,24 @@ def get_exe_postfix():
     raise 'Unsupported platform: %s' % platform.system()
 
 
+def get_script_postfix():
+    '''
+    Return the file extension for executable files.
+    '''
+    if platform.system() in ('Linux', 'Darwin'):
+        return ''
+    elif platform.system() == 'Windows':
+        return '.bat'
+    raise 'Unsupported platform: %s' % platform.system()
+
+
 def get_nanopb_root():
-    '''
-    Return the path to the `nanopb` root directory for the current platform.
-    '''
-    system_strs = {'Linux': 'linux', 'Windows': 'windows', 'Darwin': 'macosx'}
-    if platform.system() not in system_strs:
-        raise 'Unsupported platform: %s' % platform.system()
-    system_str = system_strs[platform.system()]
-    return get_base_path().joinpath('bin').dirs('nanopb-*-%s-*' %
-                                                system_str)[0]
+    if platform.system() in ('Linux', 'Darwin'):
+        return conda_prefix().joinpath('include', 'Arduino', 'nanopb')
+    elif platform.system() == 'Windows':
+        return conda_prefix().joinpath('Library', 'include', 'Arduino',
+                                       'nanopb')
+    raise 'Unsupported platform: %s' % platform.system()
 
 
 def get_sources():
@@ -65,14 +101,7 @@ def get_sources():
 
 
 def get_includes():
-    return [get_base_path().joinpath('include'), get_nanopb_root()]
-
-
-def get_nanopb_bin_dir():
-    '''
-    Return the path to the `nanopb` binary directory for the current platform.
-    '''
-    return get_nanopb_root().joinpath('generator-bin')
+    return [get_base_path().joinpath('include')]
 
 
 def compile_nanopb(proto_path, options_file=None):
@@ -82,25 +111,24 @@ def compile_nanopb(proto_path, options_file=None):
     [1]: https://code.google.com/p/nanopb
     '''
     proto_path = path(proto_path)
-    nanopb_bin_dir = get_nanopb_bin_dir()
     tempdir = path(tempfile.mkdtemp(prefix='nanopb'))
+    cwd = os.getcwd()
     try:
-        protoc = nanopb_bin_dir.joinpath('protoc' + get_exe_postfix())
-        nanopb_generator = nanopb_bin_dir.joinpath('nanopb_generator' +
-                                                   get_exe_postfix())
+        os.chdir(tempdir)
+        protoc = 'protoc' + get_exe_postfix()
         check_call([protoc, '-I%s' % proto_path.parent, proto_path,
                     '-o%s' % (tempdir.joinpath(proto_path.namebase + '.pb'))])
-        nanopb_gen_cmd = [nanopb_generator,
+        nanopb_gen_cmd = [sys.executable, '-m', 'nanopb_generator',
                           tempdir.joinpath(proto_path.namebase + '.pb')]
         if options_file is not None:
             nanopb_gen_cmd += ['-f%s' % options_file]
         check_call(nanopb_gen_cmd)
-        print ' '.join(nanopb_gen_cmd)
         header = tempdir.files('*.h')[0].bytes()
         source = tempdir.files('*.c')[0].bytes()
         source = source.replace(proto_path.namebase + '.pb.h',
                                 '{{ header_path }}')
     finally:
+        os.chdir(cwd)
         tempdir.rmtree()
     return {'header': header, 'source': source}
 
@@ -113,11 +141,10 @@ def compile_pb(proto_path):
     [2]: https://code.google.com/p/protobuf
     '''
     proto_path = path(proto_path)
-    nanopb_bin_dir = get_nanopb_bin_dir()
     tempdir = path(tempfile.mkdtemp(prefix='nanopb'))
     result = {}
     try:
-        protoc = nanopb_bin_dir.joinpath('protoc' + get_exe_postfix())
+        protoc = 'protoc' + get_exe_postfix()
         check_call([protoc, '-I%s' % proto_path.parent, proto_path,
                     '--python_out=%s' % tempdir, '--cpp_out=%s' % tempdir])
         result['python'] = tempdir.files('*.py')[0].bytes()
