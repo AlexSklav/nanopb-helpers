@@ -14,13 +14,15 @@ build:
 requirements:
   build:
     - nanopb
-    - path_helpers
     - paver
+    #: .. versionadded:: X.X.X
+    - conda-helpers
     - python
 
   run:
     - nanopb
-    - path_helpers
+    #: .. versionadded:: X.X.X
+    - conda-helpers
     - python
 
 # source will be downloaded prior to filling in jinja templates
