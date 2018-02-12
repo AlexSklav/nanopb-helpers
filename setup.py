@@ -4,13 +4,13 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 from setuptools import setup
-import sys
 
-sys.path.insert(0, '.')
-import version
+import versioneer
+
 
 setup(name='nanopb_helpers',
-      version=version.getVersion(),
+      version=versioneer.get_version(),
+      cmdclass=versioneer.get_cmdclass(),
       description='Cross-platform Python API for `nanopb`',
       author='Christian Fobel',
       author_email='christian@fobel.net',

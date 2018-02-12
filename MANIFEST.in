@@ -1,8 +1,8 @@
 include README.md
-include RELEASE-VERSION
-include version.py
 include setup.py
 include finddata.py
 recursive-include nanopb_helpers *
 recursive-exclude nanopb_helpers *.pyc
 recursive-exclude nanopb_helpers *.o
+include versioneer.py
+include nanopb_helpers/_version.py

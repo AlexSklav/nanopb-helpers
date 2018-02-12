@@ -26,6 +26,10 @@ from subprocess import check_call
 #: .. versionadded:: X.X.X
 import conda_helpers as ch
 
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions
+
 
 def get_base_path():
     return path(__file__).parent.abspath()
