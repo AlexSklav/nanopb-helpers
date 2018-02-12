@@ -29,3 +29,7 @@ requirements:
 # Example assumes that this folder has setup.py in it
 source:
   git_url: ../
+
+about:
+  home: https://github.com/sci-bots/nanopb-helpers
+  license: BSD-3
