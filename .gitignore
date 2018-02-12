@@ -1,5 +1,4 @@
 RELEASE-VERSION
-paver-minilib.zip
 *.egg-info
 *.pyc
 .ropeproject
@@ -9,4 +8,3 @@ setup.py
 *.swp
 build
 dist
-nanopb_helpers/Arduino/library/*
