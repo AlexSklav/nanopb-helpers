@@ -1,29 +1,37 @@
+{% if GIT_DESCRIBE_NUMBER > '0' %}
+{% set GIT_VERSION = GIT_DESCRIBE_TAG[1:] + '.post' + GIT_DESCRIBE_NUMBER %}
+{% else %}
+{% set GIT_VERSION = GIT_DESCRIBE_TAG[1:] %}
+{% endif %}
 package:
   name: nanopb-helpers
-{% if GIT_DESCRIBE_NUMBER > '0' %}
-  version: {{ GIT_DESCRIBE_TAG[1:] }}.post{{ GIT_DESCRIBE_NUMBER }}
-{% else %}
-  version: {{ GIT_DESCRIBE_TAG[1:] }}
-{% endif %}
+  version: {{ GIT_VERSION }}
 
 build:
   # If this is a new build for the same version, increment the build
   # number. If you do not include this key, it defaults to 0.
   number: 0
+  #: .. versionadded:: 0.8
+  noarch: true
 
 requirements:
   build:
     - nanopb
-    - path_helpers
-    - paver
+    #: .. versionadded:: 0.8
+    - conda-helpers
     - python
 
   run:
     - nanopb
-    - path_helpers
+    #: .. versionadded:: 0.8
+    - conda-helpers
     - python
 
 # source will be downloaded prior to filling in jinja templates
 # Example assumes that this folder has setup.py in it
 source:
   git_url: ../
+
+about:
+  home: https://github.com/sci-bots/nanopb-helpers
+  license: BSD-3
