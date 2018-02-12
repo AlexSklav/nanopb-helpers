@@ -11,19 +11,19 @@ build:
   # If this is a new build for the same version, increment the build
   # number. If you do not include this key, it defaults to 0.
   number: 0
-  #: .. versionadded:: X.X.X
+  #: .. versionadded:: 0.8
   noarch: true
 
 requirements:
   build:
     - nanopb
-    #: .. versionadded:: X.X.X
+    #: .. versionadded:: 0.8
     - conda-helpers
     - python
 
   run:
     - nanopb
-    #: .. versionadded:: X.X.X
+    #: .. versionadded:: 0.8
     - conda-helpers
     - python
 

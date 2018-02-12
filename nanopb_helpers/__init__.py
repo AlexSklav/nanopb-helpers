@@ -23,7 +23,7 @@ import tempfile
 
 from path_helpers import path
 from subprocess import check_call
-#: .. versionadded:: X.X.X
+#: .. versionadded:: 0.8
 import conda_helpers as ch
 
 from ._version import get_versions
@@ -70,7 +70,7 @@ def get_script_postfix():
 
 def get_nanopb_root():
     '''
-    .. versionchanged:: X.X.X
+    .. versionchanged:: 0.8
         Use :func:`conda_helpers.conda_prefix` function.
     '''
     if platform.system() in ('Linux', 'Darwin'):
