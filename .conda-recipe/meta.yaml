@@ -7,6 +7,9 @@ package:
   name: nanopb-helpers
   version: {{ GIT_VERSION }}
 
+source:
+  git_url: ../
+
 build:
   # If this is a new build for the same version, increment the build
   # number. If you do not include this key, it defaults to 0.
@@ -20,17 +23,16 @@ requirements:
     #: .. versionadded:: 0.8
     - conda-helpers
     - python
+    #: .. versionadded:: 0.9
+    - six
 
   run:
     - nanopb
     #: .. versionadded:: 0.8
     - conda-helpers
     - python
-
-# source will be downloaded prior to filling in jinja templates
-# Example assumes that this folder has setup.py in it
-source:
-  git_url: ../
+    #: .. versionadded:: 0.9
+    - six
 
 about:
   home: https://github.com/sci-bots/nanopb-helpers
