@@ -16,6 +16,7 @@ See [license][3] for more info.
 [2]: http://koti.kapsi.fi/~jpa/nanopb/download/
 [3]: https://code.google.com/p/nanopb/source/browse/LICENSE.txt
 '''
+from __future__ import absolute_import
 import os
 import platform
 import sys
