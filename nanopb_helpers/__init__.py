@@ -109,8 +109,8 @@ def compile_nanopb(proto_path, options_file=None):
         if options_file is not None:
             nanopb_gen_cmd += ['-f%s' % options_file]
         check_call(nanopb_gen_cmd)
-        header = tempdir.files('*.h')[0].bytes()
-        source = tempdir.files('*.c')[0].bytes()
+        header = tempdir.files('*.h')[0].text()
+        source = tempdir.files('*.c')[0].text()
         source = source.replace(proto_path.namebase + '.pb.h',
                                 '{{ header_path }}')
     finally:
@@ -133,9 +133,9 @@ def compile_pb(proto_path):
         protoc = 'protoc' + get_exe_postfix()
         check_call([protoc, '-I%s' % proto_path.parent, proto_path,
                     '--python_out=%s' % tempdir, '--cpp_out=%s' % tempdir])
-        result['python'] = tempdir.files('*.py')[0].bytes()
-        result['cpp'] = {'header': tempdir.files('*.h*')[0].bytes(),
-                         'source': tempdir.files('*.c*')[0].bytes()}
+        result['python'] = tempdir.files('*.py')[0].text()
+        result['cpp'] = {'header': tempdir.files('*.h*')[0].text(),
+                         'source': tempdir.files('*.c*')[0].text()}
     finally:
         tempdir.rmtree()
     return result
