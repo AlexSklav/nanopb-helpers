@@ -92,9 +92,13 @@ def get_includes():
 
 def compile_nanopb(proto_path, options_file=None):
     '''
-    Compile specified Protocol Buffer file to [`Nanopb`][1] "plain-`C`" code.
+    Compile specified Protocol Buffer file to `Nanopb
+    <https://code.google.com/p/nanopb>`_ "plain-``C``" code.
 
-    [1]: https://code.google.com/p/nanopb
+
+    .. versionchanged:: 0.9.2
+        Fix Python 3 unicode support.  Use :meth:`path_helpers.path.text`
+        method instead of :meth:`path_helpers.path.bytes` method.
     '''
     proto_path = path(proto_path)
     tempdir = path(tempfile.mkdtemp(prefix='nanopb'))
@@ -109,8 +113,8 @@ def compile_nanopb(proto_path, options_file=None):
         if options_file is not None:
             nanopb_gen_cmd += ['-f%s' % options_file]
         check_call(nanopb_gen_cmd)
-        header = tempdir.files('*.h')[0].bytes()
-        source = tempdir.files('*.c')[0].bytes()
+        header = tempdir.files('*.h')[0].text()
+        source = tempdir.files('*.c')[0].text()
         source = source.replace(proto_path.namebase + '.pb.h',
                                 '{{ header_path }}')
     finally:
@@ -121,10 +125,13 @@ def compile_nanopb(proto_path, options_file=None):
 
 def compile_pb(proto_path):
     '''
-    Compile specified Protocol Buffer file to Google [Protocol Buffers][2]
-    `C++` and Python code.
+    Compile specified Protocol Buffer file to Google `Protocol Buffers
+    <https://code.google.com/p/protobuf>`_ `C++` and Python code.
 
-    [2]: https://code.google.com/p/protobuf
+
+    .. versionchanged:: 0.9.2
+        Fix Python 3 unicode support.  Use :meth:`path_helpers.path.text`
+        method instead of :meth:`path_helpers.path.bytes` method.
     '''
     proto_path = path(proto_path)
     tempdir = path(tempfile.mkdtemp(prefix='nanopb'))
@@ -133,9 +140,9 @@ def compile_pb(proto_path):
         protoc = 'protoc' + get_exe_postfix()
         check_call([protoc, '-I%s' % proto_path.parent, proto_path,
                     '--python_out=%s' % tempdir, '--cpp_out=%s' % tempdir])
-        result['python'] = tempdir.files('*.py')[0].bytes()
-        result['cpp'] = {'header': tempdir.files('*.h*')[0].bytes(),
-                         'source': tempdir.files('*.c*')[0].bytes()}
+        result['python'] = tempdir.files('*.py')[0].text()
+        result['cpp'] = {'header': tempdir.files('*.h*')[0].text(),
+                         'source': tempdir.files('*.c*')[0].text()}
     finally:
         tempdir.rmtree()
     return result
