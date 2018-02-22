@@ -92,9 +92,13 @@ def get_includes():
 
 def compile_nanopb(proto_path, options_file=None):
     '''
-    Compile specified Protocol Buffer file to [`Nanopb`][1] "plain-`C`" code.
+    Compile specified Protocol Buffer file to `Nanopb
+    <https://code.google.com/p/nanopb>`_ "plain-``C``" code.
 
-    [1]: https://code.google.com/p/nanopb
+
+    .. versionchanged:: 0.9.2
+        Fix Python 3 unicode support.  Use :meth:`path_helpers.path.text`
+        method instead of :meth:`path_helpers.path.bytes` method.
     '''
     proto_path = path(proto_path)
     tempdir = path(tempfile.mkdtemp(prefix='nanopb'))
@@ -121,10 +125,13 @@ def compile_nanopb(proto_path, options_file=None):
 
 def compile_pb(proto_path):
     '''
-    Compile specified Protocol Buffer file to Google [Protocol Buffers][2]
-    `C++` and Python code.
+    Compile specified Protocol Buffer file to Google `Protocol Buffers
+    <https://code.google.com/p/protobuf>`_ `C++` and Python code.
 
-    [2]: https://code.google.com/p/protobuf
+
+    .. versionchanged:: 0.9.2
+        Fix Python 3 unicode support.  Use :meth:`path_helpers.path.text`
+        method instead of :meth:`path_helpers.path.bytes` method.
     '''
     proto_path = path(proto_path)
     tempdir = path(tempfile.mkdtemp(prefix='nanopb'))
