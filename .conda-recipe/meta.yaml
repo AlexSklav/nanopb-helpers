@@ -15,7 +15,10 @@ source:
 build:
   # If this is a new build for the same version, increment the build
   # number. If you do not include this key, it defaults to 0.
-  number: 0
+  number: 1
+  #: .. versionadded:: 0.8
+  #: .. versionchanged:: 0.10
+  noarch: python
   script:
     # Copy `nanopb-helpers` C source and headers to Conda include directory.
     - python -c
@@ -37,13 +40,30 @@ requirements:
     #: .. versionadded:: 0.9
     - six
 
-  run:
-    - nanopb
-    #: .. versionadded:: 0.8
-    - conda-helpers
-    - python
-    #: .. versionadded:: 0.9
-    - six
+# .. versionadded:: 0.17
+#     Split into `noarch` C++ header package and platform-specific Python
+#     package.
+outputs:
+  - name: nanopb-helpers-dev
+    noarch: generic
+    files:
+      - share
+  - name: nanopb-helpers
+    noarch: python
+    files:
+      - Lib/site-packages/nanopb_helpers
+    requirements:
+      run:
+        - {{ pin_subpackage('nanopb-helpers-dev', max_pin='x.x') }}
+        - nanopb
+        #: .. versionadded:: 0.8
+        - conda-helpers
+        - python
+        #: .. versionadded:: 0.9
+        - six
+    test:
+      imports:
+        - nanopb_helpers
 
 about:
   home: https://github.com/sci-bots/nanopb-helpers
