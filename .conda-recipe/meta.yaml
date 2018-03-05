@@ -35,7 +35,7 @@ requirements:
     - nanopb
     #: .. versionadded:: 0.8
     - conda-helpers
-    - platformio-helpers
+    - platformio-helpers >=0.6
     - python
     #: .. versionadded:: 0.9
     - six
