@@ -1,3 +1,5 @@
+{% set LIB_NAME = 'nanopb' %}
+
 {% if GIT_DESCRIBE_NUMBER > '0' %}
 {% set GIT_VERSION = GIT_DESCRIBE_TAG[1:] + '.post' + GIT_DESCRIBE_NUMBER %}
 {% else %}
@@ -13,26 +15,55 @@ source:
 build:
   # If this is a new build for the same version, increment the build
   # number. If you do not include this key, it defaults to 0.
-  number: 0
+  number: 1
   #: .. versionadded:: 0.8
-  noarch: true
+  #: .. versionchanged:: 0.10
+  noarch: python
+  script:
+    # Copy `nanopb-helpers` C source and headers to Conda include directory.
+    - python -c
+        "import os.path; import os; import shutil; import platformio_helpers as pioh;
+        lib_src_dir = os.path.join(os.environ['SRC_DIR'], 'lib', '{{ LIB_NAME }}');
+        install_dir = pioh.conda_arduino_include_path().joinpath('{{ LIB_NAME }}');
+        shutil.copytree(lib_src_dir, install_dir);
+        "
+    # Install source directory as Python package.
+    - python setup.py install --single-version-externally-managed --record record.txt
 
 requirements:
   build:
     - nanopb
     #: .. versionadded:: 0.8
     - conda-helpers
+    - platformio-helpers
     - python
     #: .. versionadded:: 0.9
     - six
 
-  run:
-    - nanopb
-    #: .. versionadded:: 0.8
-    - conda-helpers
-    - python
-    #: .. versionadded:: 0.9
-    - six
+# .. versionadded:: 0.17
+#     Split into `noarch` C++ header package and platform-specific Python
+#     package.
+outputs:
+  - name: nanopb-helpers-dev
+    noarch: generic
+    files:
+      - share
+  - name: nanopb-helpers
+    noarch: python
+    files:
+      - Lib/site-packages/nanopb_helpers
+    requirements:
+      run:
+        - {{ pin_subpackage('nanopb-helpers-dev', max_pin='x.x') }}
+        - nanopb
+        #: .. versionadded:: 0.8
+        - conda-helpers
+        - python
+        #: .. versionadded:: 0.9
+        - six
+    test:
+      imports:
+        - nanopb_helpers
 
 about:
   home: https://github.com/sci-bots/nanopb-helpers
