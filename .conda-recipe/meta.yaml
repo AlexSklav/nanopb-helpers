@@ -32,10 +32,10 @@ build:
 
 requirements:
   build:
-    - nanopb
+    - nanopb >=0.3.7
     #: .. versionadded:: 0.8
-    - conda-helpers
-    - platformio-helpers >=0.6
+    - conda-helpers >=0.14
+    - platformio-helpers >=0.7
     - python
     #: .. versionadded:: 0.9
     - six
@@ -55,9 +55,9 @@ outputs:
     requirements:
       run:
         - {{ pin_subpackage('nanopb-helpers-dev', max_pin='x.x') }}
-        - nanopb
+        - nanopb >=0.3.7
         #: .. versionadded:: 0.8
-        - conda-helpers
+        - conda-helpers >=0.14
         - python
         #: .. versionadded:: 0.9
         - six
