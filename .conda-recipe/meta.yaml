@@ -22,10 +22,13 @@ build:
   script:
     # Copy `nanopb-helpers` C source and headers to Conda include directory.
     - python -c
-        "import os.path; import os; import shutil; import platformio_helpers as pioh;
+        "import os.path;
+        import os;
+        from distutils.dir_util import copy_tree;
+        import platformio_helpers as pioh;
         lib_src_dir = os.path.join(os.environ['SRC_DIR'], 'lib', '{{ LIB_NAME }}');
         install_dir = pioh.conda_arduino_include_path().joinpath('{{ LIB_NAME }}');
-        shutil.copytree(lib_src_dir, install_dir);
+        copy_tree(lib_src_dir, install_dir);
         "
     # Install source directory as Python package.
     - python setup.py install --single-version-externally-managed --record record.txt
