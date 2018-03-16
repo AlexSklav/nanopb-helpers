@@ -15,7 +15,7 @@ source:
 build:
   # If this is a new build for the same version, increment the build
   # number. If you do not include this key, it defaults to 0.
-  number: 1
+  number: 0
   #: .. versionadded:: 0.8
   #: .. versionchanged:: 0.10
   noarch: python
@@ -37,8 +37,8 @@ requirements:
   build:
     - nanopb >=0.3.7
     #: .. versionadded:: 0.8
-    - conda-helpers >=0.14
-    - platformio-helpers >=0.7
+    - conda-helpers >=0.15
+    - platformio-helpers >=0.8
     - python
     #: .. versionadded:: 0.9
     - six
@@ -60,7 +60,7 @@ outputs:
         - {{ pin_subpackage('nanopb-helpers-dev', max_pin='x.x') }}
         - nanopb >=0.3.7
         #: .. versionadded:: 0.8
-        - conda-helpers >=0.14
+        - conda-helpers >=0.15
         - python
         #: .. versionadded:: 0.9
         - six
