@@ -1,4 +1,5 @@
-'''
+# coding: utf-8
+"""
 Provide an API for cross-platform compiling Protocol Buffer definitions for the
 following targets:
 
@@ -15,83 +16,83 @@ See [license][3] for more info.
 [1]: http://koti.kapsi.fi/~jpa/nanopb
 [2]: http://koti.kapsi.fi/~jpa/nanopb/download/
 [3]: https://code.google.com/p/nanopb/source/browse/LICENSE.txt
-'''
-from __future__ import absolute_import
+"""
 import os
 import platform
 import sys
 import tempfile
+from typing import List, Optional, Dict
 
-from path_helpers import path
-from subprocess import check_call
-#: .. versionadded:: 0.8
 import conda_helpers as ch
+import path_helpers as ph
+
+from subprocess import check_call
 
 from ._version import get_versions
+
 __version__ = get_versions()['version']
 del get_versions
 
 
-def get_base_path():
-    return path(__file__).parent.abspath()
+def get_base_path() -> ph.path:
+    return ph.path(__file__).parent.abspath()
 
 
-def package_path():
-    return path(__file__).parent
+def package_path() -> ph.path:
+    return ph.path(__file__).parent
 
 
-def get_lib_directory():
-    '''
+def get_lib_directory() -> ph.path:
+    """
     Return directory containing the Arduino library headers.
-    '''
+    """
     return package_path().joinpath('Arduino', 'library')
 
 
-def get_exe_postfix():
-    '''
+def get_exe_postfix() -> str:
+    """
     Return the file extension for executable files.
-    '''
+    """
     if platform.system() in ('Linux', 'Darwin'):
         return ''
     elif platform.system() == 'Windows':
         return '.exe'
-    raise 'Unsupported platform: %s' % platform.system()
+    raise f'Unsupported platform: {platform.system()}'
 
 
-def get_script_postfix():
-    '''
+def get_script_postfix() -> str:
+    """
     Return the file extension for executable files.
-    '''
+    """
     if platform.system() in ('Linux', 'Darwin'):
         return ''
     elif platform.system() == 'Windows':
         return '.bat'
-    raise 'Unsupported platform: %s' % platform.system()
+    raise f'Unsupported platform: {platform.system()}'
 
 
-def get_nanopb_root():
-    '''
+def get_nanopb_root() -> ph.path:
+    """
     .. versionchanged:: 0.8
         Use :func:`conda_helpers.conda_prefix` function.
-    '''
+    """
     if platform.system() in ('Linux', 'Darwin'):
         return ch.conda_prefix().joinpath('include', 'Arduino', 'nanopb')
     elif platform.system() == 'Windows':
-        return ch.conda_prefix().joinpath('Library', 'include', 'Arduino',
-                                          'nanopb')
-    raise 'Unsupported platform: %s' % platform.system()
+        return ch.conda_prefix().joinpath('Library', 'include', 'Arduino', 'nanopb')
+    raise f'Unsupported platform: {platform.system()}'
 
 
-def get_sources():
+def get_sources() -> List:
     return get_nanopb_root().files('*.c*')
 
 
-def get_includes():
+def get_includes() -> List[ph.path]:
     return [get_base_path().joinpath('include')]
 
 
-def compile_nanopb(proto_path, options_file=None):
-    '''
+def compile_nanopb(proto_path: ph.path, options_file: Optional[str] = None) -> Dict:
+    """
     Compile specified Protocol Buffer file to `Nanopb
     <https://code.google.com/p/nanopb>`_ "plain-``C``" code.
 
@@ -99,32 +100,31 @@ def compile_nanopb(proto_path, options_file=None):
     .. versionchanged:: 0.9.2
         Fix Python 3 unicode support.  Use :meth:`path_helpers.path.text`
         method instead of :meth:`path_helpers.path.bytes` method.
-    '''
-    proto_path = path(proto_path)
-    tempdir = path(tempfile.mkdtemp(prefix='nanopb'))
+    """
+    proto_path = ph.path(proto_path)
+    tempdir = ph.path(tempfile.mkdtemp(prefix='nanopb'))
     cwd = os.getcwd()
     try:
         os.chdir(tempdir)
-        protoc = 'protoc' + get_exe_postfix()
-        check_call([protoc, '-I%s' % proto_path.parent, proto_path,
-                    '-o%s' % (tempdir.joinpath(proto_path.namebase + '.pb'))])
+        protoc = f'protoc{get_exe_postfix()}'
+        check_call([protoc, f'-I{proto_path.parent}', proto_path,
+                    f'-o{tempdir.joinpath(proto_path.namebase + ".pb")}'])
         nanopb_gen_cmd = [sys.executable, '-m', 'nanopb_generator',
                           tempdir.joinpath(proto_path.namebase + '.pb')]
         if options_file is not None:
-            nanopb_gen_cmd += ['-f%s' % options_file]
+            nanopb_gen_cmd += [f'-f{options_file}']
         check_call(nanopb_gen_cmd)
         header = tempdir.files('*.h')[0].text()
         source = tempdir.files('*.c')[0].text()
-        source = source.replace(proto_path.namebase + '.pb.h',
-                                '{{ header_path }}')
+        source = source.replace(f'{proto_path.namebase}.pb.h', '{{ header_path }}')
     finally:
         os.chdir(cwd)
         tempdir.rmtree()
     return {'header': header, 'source': source}
 
 
-def compile_pb(proto_path):
-    '''
+def compile_pb(proto_path: ph.path) -> Dict:
+    """
     Compile specified Protocol Buffer file to Google `Protocol Buffers
     <https://code.google.com/p/protobuf>`_ `C++` and Python code.
 
@@ -132,14 +132,14 @@ def compile_pb(proto_path):
     .. versionchanged:: 0.9.2
         Fix Python 3 unicode support.  Use :meth:`path_helpers.path.text`
         method instead of :meth:`path_helpers.path.bytes` method.
-    '''
-    proto_path = path(proto_path)
-    tempdir = path(tempfile.mkdtemp(prefix='nanopb'))
+    """
+    proto_path = ph.path(proto_path)
+    tempdir = ph.path(tempfile.mkdtemp(prefix='nanopb'))
     result = {}
     try:
-        protoc = 'protoc' + get_exe_postfix()
-        check_call([protoc, '-I%s' % proto_path.parent, proto_path,
-                    '--python_out=%s' % tempdir, '--cpp_out=%s' % tempdir])
+        protoc = f'protoc{get_exe_postfix()}'
+        check_call([protoc, f'-I{proto_path.parent}', proto_path,
+                    f'--python_out={tempdir}', f'--cpp_out={tempdir}'])
         result['python'] = tempdir.files('*.py')[0].text()
         result['cpp'] = {'header': tempdir.files('*.h*')[0].text(),
                          'source': tempdir.files('*.c*')[0].text()}

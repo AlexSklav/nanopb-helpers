@@ -1,5 +1,4 @@
 {% set LIB_NAME = 'nanopb' %}
-
 {% if GIT_DESCRIBE_NUMBER > '0' %}
 {% set GIT_VERSION = GIT_DESCRIBE_TAG[1:] + '.post' + GIT_DESCRIBE_NUMBER %}
 {% else %}
@@ -9,43 +8,38 @@ package:
   name: nanopb-helpers
   version: {{ GIT_VERSION }}
 
-source:
-  git_url: ../
-
 build:
   # If this is a new build for the same version, increment the build
   # number. If you do not include this key, it defaults to 0.
   number: 0
-  #: .. versionadded:: 0.8
-  #: .. versionchanged:: 0.10
   noarch: python
   script:
     # Copy `nanopb-helpers` C source and headers to Conda include directory.
-    - python -c
-        "import os.path;
-        import os;
-        from distutils.dir_util import copy_tree;
-        import platformio_helpers as pioh;
-        lib_src_dir = os.path.join(os.environ['SRC_DIR'], 'lib', '{{ LIB_NAME }}');
-        install_dir = pioh.conda_arduino_include_path().joinpath('{{ LIB_NAME }}');
-        copy_tree(lib_src_dir, install_dir);
-        "
+    - python -c 
+      "import os;
+      from distutils.dir_util import copy_tree;
+      import platformio_helpers as pioh;
+      lib_src_dir = os.path.join('{{ SRC_DIR }}', 'lib', '{{ LIB_NAME }}');
+      install_dir = pioh.conda_arduino_include_path().joinpath('{{ LIB_NAME }}');
+      copy_tree(str(lib_src_dir), str(install_dir))
+      "
     # Install source directory as Python package.
     - python setup.py install --single-version-externally-managed --record record.txt
 
 requirements:
   build:
-    - nanopb >=0.3.7
-    #: .. versionadded:: 0.8
-    - conda-helpers >=0.15
-    - platformio-helpers >=0.8
-    - python
-    #: .. versionadded:: 0.9
+    - python {{ python }}
+    - conda-helpers
+    - platformio-helpers
     - six
+    - path-helpers
+    #: .. versionadded:: 0.12_py3
+    - pip
 
-# .. versionadded:: 0.17
-#     Split into `noarch` C++ header package and platform-specific Python
-#     package.
+  #: .. versionadded:: 0.12_py3
+  pip:
+    - nanopb
+
 outputs:
   - name: nanopb-helpers-dev
     noarch: generic
@@ -57,13 +51,18 @@ outputs:
       - Lib/site-packages/nanopb_helpers
     requirements:
       run:
+        - python {{ python }}
         - {{ pin_subpackage('nanopb-helpers-dev', max_pin='x.x') }}
-        - nanopb >=0.3.7
-        #: .. versionadded:: 0.8
-        - conda-helpers >=0.15
-        - python
-        #: .. versionadded:: 0.9
+        - conda-helpers
+        - platformio-helpers
         - six
+        - path-helpers
+        #: .. versionadded:: 0.12_py3
+        - pip
+      #: .. versionadded:: 0.12_py3
+      pip:
+        - nanopb
+
     test:
       imports:
         - nanopb_helpers
@@ -71,3 +70,6 @@ outputs:
 about:
   home: https://github.com/sci-bots/nanopb-helpers
   license: BSD-3
+
+source:
+  git_url: ../
