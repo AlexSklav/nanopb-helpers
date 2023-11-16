@@ -4,5 +4,7 @@ include finddata.py
 recursive-include nanopb_helpers *
 recursive-exclude nanopb_helpers *.pyc
 recursive-exclude nanopb_helpers *.o
+exclude .DS_Store
+recursive-exclude nanopb_helpers .DS_Store
 include versioneer.py
 include nanopb_helpers/_version.py

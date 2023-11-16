@@ -17,30 +17,18 @@ build:
   noarch: python
   script:
     # Copy `nanopb-helpers` C source and headers to Conda include directory.
-    - python -c 
-      "import os;
-      from distutils.dir_util import copy_tree;
-      import platformio_helpers as pioh;
-      lib_src_dir = os.path.join('{{ SRC_DIR }}', 'lib', '{{ LIB_NAME }}');
-      install_dir = pioh.conda_arduino_include_path().joinpath('{{ LIB_NAME }}');
-      copy_tree(str(lib_src_dir), str(install_dir))
-      "
-    # Install source directory as Python package.
+    - python file_handler.py {{ SRC_DIR }} {{ PREFIX }} {{ PKG_NAME }} {{ MODULE_NAME }} {{ LIB_NAME }}
+    # Run setup
     - python setup.py install --single-version-externally-managed --record record.txt
 
 requirements:
   build:
-    - python {{ python }}
+    - python >=3.8
+    - nanopb
+    - path-helpers
     - conda-helpers
     - platformio-helpers
-    - six
-    - path-helpers
-    #: .. versionadded:: 0.12_py3
     - pip
-
-  #: .. versionadded:: 0.12_py3
-  pip:
-    - nanopb
 
 outputs:
   - name: {{ PKG_NAME }}-dev
@@ -50,20 +38,17 @@ outputs:
   - name: {{ PKG_NAME }}
     noarch: python
     files:
-      - Lib/site-packages/{{ MODULE_NAME }} # [win]
-      - {{ PREFIX }}/lib/python{{ python }}/site-packages/{{ MODULE_NAME }} # [unix]
+      - {{ SP_DIR }}/{{ MODULE_NAME }}
     requirements:
       run:
-        - python {{ python }}
+        - python >=3.8
         - {{ pin_subpackage(PKG_NAME + '-dev', max_pin='x.x') }}
+        - nanopb
+        - path-helpers
         - conda-helpers
         - platformio-helpers
-        - six
-        - path-helpers
         - pip
 
-      pip:
-        - nanopb
     test:
       imports:
         - {{ MODULE_NAME }}
@@ -71,6 +56,8 @@ outputs:
 about:
   home: https://github.com/sci-bots/nanopb-helpers
   license: BSD-3
+  summary: Cross-platform Python API for `nanopb`
 
 source:
-  git_url: ../
+#  git_url: ../
+  path: ..
