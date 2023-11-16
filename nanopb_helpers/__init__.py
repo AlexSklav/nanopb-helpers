@@ -24,8 +24,8 @@ import tempfile
 from typing import List, Optional, Dict
 
 import conda_helpers as ch
-import path_helpers as ph
 
+from path_helpers import path
 from subprocess import check_call
 
 from ._version import get_versions
@@ -34,15 +34,15 @@ __version__ = get_versions()['version']
 del get_versions
 
 
-def get_base_path() -> ph.path:
-    return ph.path(__file__).parent.abspath()
+def get_base_path() -> path:
+    return path(__file__).parent.abspath()
 
 
-def package_path() -> ph.path:
-    return ph.path(__file__).parent
+def package_path() -> path:
+    return path(__file__).parent
 
 
-def get_lib_directory() -> ph.path:
+def get_lib_directory() -> path:
     """
     Return directory containing the Arduino library headers.
     """
@@ -71,7 +71,7 @@ def get_script_postfix() -> str:
     raise f'Unsupported platform: {platform.system()}'
 
 
-def get_nanopb_root() -> ph.path:
+def get_nanopb_root() -> path:
     """
     .. versionchanged:: 0.8
         Use :func:`conda_helpers.conda_prefix` function.
@@ -83,15 +83,15 @@ def get_nanopb_root() -> ph.path:
     raise f'Unsupported platform: {platform.system()}'
 
 
-def get_sources() -> List:
+def get_sources() -> List[path]:
     return get_nanopb_root().files('*.c*')
 
 
-def get_includes() -> List[ph.path]:
+def get_includes() -> List[path]:
     return [get_base_path().joinpath('include')]
 
 
-def compile_nanopb(proto_path: ph.path, options_file: Optional[str] = None) -> Dict:
+def compile_nanopb(proto_path: path, options_file: Optional[str] = None) -> Dict:
     """
     Compile specified Protocol Buffer file to `Nanopb
     <https://code.google.com/p/nanopb>`_ "plain-``C``" code.
@@ -101,16 +101,15 @@ def compile_nanopb(proto_path: ph.path, options_file: Optional[str] = None) -> D
         Fix Python 3 unicode support.  Use :meth:`path_helpers.path.text`
         method instead of :meth:`path_helpers.path.bytes` method.
     """
-    proto_path = ph.path(proto_path)
-    tempdir = ph.path(tempfile.mkdtemp(prefix='nanopb'))
+    proto_path = path(proto_path)
+    tempdir = path(tempfile.mkdtemp(prefix='nanopb'))
     cwd = os.getcwd()
     try:
         os.chdir(tempdir)
         protoc = f'protoc{get_exe_postfix()}'
-        check_call([protoc, f'-I{proto_path.parent}', proto_path,
-                    f'-o{tempdir.joinpath(proto_path.namebase + ".pb")}'])
-        nanopb_gen_cmd = [sys.executable, '-m', 'nanopb_generator',
-                          tempdir.joinpath(proto_path.namebase + '.pb')]
+        proto_pb_path = str(tempdir.joinpath(proto_path.namebase + ".pb"))
+        check_call([protoc, f'-I{str(proto_path.parent)}', str(proto_path), f'-o{proto_pb_path}'])
+        nanopb_gen_cmd = [sys.executable, '-m', 'nanopb_generator', proto_pb_path]
         if options_file is not None:
             nanopb_gen_cmd += [f'-f{options_file}']
         check_call(nanopb_gen_cmd)
@@ -123,7 +122,7 @@ def compile_nanopb(proto_path: ph.path, options_file: Optional[str] = None) -> D
     return {'header': header, 'source': source}
 
 
-def compile_pb(proto_path: ph.path) -> Dict:
+def compile_pb(proto_path: path) -> Dict:
     """
     Compile specified Protocol Buffer file to Google `Protocol Buffers
     <https://code.google.com/p/protobuf>`_ `C++` and Python code.
@@ -133,8 +132,8 @@ def compile_pb(proto_path: ph.path) -> Dict:
         Fix Python 3 unicode support.  Use :meth:`path_helpers.path.text`
         method instead of :meth:`path_helpers.path.bytes` method.
     """
-    proto_path = ph.path(proto_path)
-    tempdir = ph.path(tempfile.mkdtemp(prefix='nanopb'))
+    proto_path = path(proto_path)
+    tempdir = path(tempfile.mkdtemp(prefix='nanopb'))
     result = {}
     try:
         protoc = f'protoc{get_exe_postfix()}'
