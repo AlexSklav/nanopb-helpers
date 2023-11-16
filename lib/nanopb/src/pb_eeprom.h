@@ -10,12 +10,16 @@ namespace nanopb {
 inline UInt8Array eeprom_to_array(uint16_t address, UInt8Array output) {
   uint16_t payload_size;
 
-  eeprom_read_block((void*)&payload_size, (void*)address, sizeof(uint16_t));
+  uint16_t* addressPtr = &address;  // Converting 'address' to a pointer
+
+  eeprom_read_block((void*)&payload_size, (void*)addressPtr, sizeof(uint16_t));
   if (output.length < payload_size) {
     output.length = 0;
     output.data = NULL;
   } else {
-    eeprom_read_block((void*)output.data, (void*)(address + 2), payload_size);
+    address = address+2;
+    uint16_t* addressPtr = &address;  // Converting 'address' to a pointer
+    eeprom_read_block((void*)output.data, (void*)addressPtr, payload_size);
     output.length = payload_size;
   }
   return output;
@@ -24,15 +28,15 @@ inline UInt8Array eeprom_to_array(uint16_t address, UInt8Array output) {
 
 inline void array_to_eeprom(uint16_t address, UInt8Array data) {
   cli();
-  eeprom_update_block((void*)&data.length, (void*)address, sizeof(uint16_t));
+  uint16_t* addressPtr = &address;  // Converting 'address' to a pointer
+  eeprom_update_block((void*)&data.length, (void*)addressPtr, sizeof(uint16_t));
   eeprom_update_block((void*)data.data, (void*)(address + 2), data.length);
   sei();
 }
 
 
 template <typename Obj, typename Fields>
-bool decode_obj_from_eeprom(uint16_t address, Obj &obj,
-                            Fields const &fields, UInt8Array pb_buffer) {
+bool decode_obj_from_eeprom(uint8_t address, Obj &obj, Fields const &fields, UInt8Array pb_buffer) {
   pb_buffer = eeprom_to_array(address, pb_buffer);
   bool ok;
   if (pb_buffer.data == NULL) {

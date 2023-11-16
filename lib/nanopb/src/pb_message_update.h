@@ -127,7 +127,7 @@ private:
           parents[parent_count].pos = iter.source.pos;
           parents[parent_count].start = iter.source.start;
           parent_count++;
-          for (int i = 0; i < count; i++) {
+          for (long unsigned int i = 0; i < count; i++) {
             /* For repeated types, the count may be greater than one.  In such
              * cases, we need to iterate through each repeated sub-message to
              * handle each one separately.
@@ -161,21 +161,21 @@ struct MessageUpdate : public MessageUpdateBase {
   MessageUpdate() : MessageUpdateBase() {}
 
   virtual bool process_field(IterPair &iter, pb_size_t count) {
-    for (int i = 0; i < parent_count; i++) LOG("  ");
+    for (unsigned int i = 0; i < parent_count; i++) LOG("  ");
     LOG("=========================================\n");
-    for (int i = 0; i < parent_count; i++) LOG("  ");
+    for (unsigned int i = 0; i < parent_count; i++) LOG("  ");
     if (parent_count > 0) {
-      for (int i = 0; i < parent_count; i++) {
+      for (unsigned int i = 0; i < parent_count; i++) {
         LOG("> %d ", parents[i].pos->tag);
       }
       LOG("\n");
     }
-    for (int i = 0; i < parent_count; i++) LOG("  ");
+    for (unsigned int i = 0; i < parent_count; i++) LOG("  ");
     LOG("tag=%d start=%p pos=%p count=%d ltype=%x atype=%x htype=%x data_size=%d \n",
            iter.source.pos->tag, iter.source.start, iter.source.pos, count,
            PB_LTYPE(iter.source.pos->type), PB_ATYPE(iter.source.pos->type),
            PB_HTYPE(iter.source.pos->type), iter.source.pos->data_size);
-    for (int i = 0; i < parent_count; i++) LOG("  ");
+    for (unsigned int i = 0; i < parent_count; i++) LOG("  ");
     LOG("-----------------------------------------");
 
     bool trigger_copy = false;

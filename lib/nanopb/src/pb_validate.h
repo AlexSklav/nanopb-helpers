@@ -28,7 +28,7 @@ struct ScalarFieldValidator : public FieldValidatorBase {
       LOG("  Level=%d != parent_count + 1=%d\n", Level, parent_count + 1);
       return false;
     }
-    int i;
+    unsigned int i;
     for (i = 0; i < parent_count; i++) {
       if (parents[i].pos->tag != tags_[i]) {
         LOG("  parent_tag=%d != tags_=%d\n", parents[i].pos->tag, tags_[i]);
