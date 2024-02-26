@@ -23,7 +23,7 @@ build:
 
 requirements:
   build:
-    - python >=3.8
+    - python >=3.6
     - nanopb
     - path-helpers
     - conda-helpers
@@ -41,7 +41,7 @@ outputs:
       - {{ SP_DIR }}/{{ MODULE_NAME }}
     requirements:
       run:
-        - python >=3.8
+        - python >=3.6
         - {{ pin_subpackage(PKG_NAME + '-dev', max_pin='x.x') }}
         - nanopb
         - path-helpers
