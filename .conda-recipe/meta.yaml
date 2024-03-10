@@ -14,6 +14,7 @@ build:
   # If this is a new build for the same version, increment the build
   # number. If you do not include this key, it defaults to 0.
   number: 0
+  noarch: python
   script:
     # Copy `nanopb-helpers` C source and headers to Conda include directory.
     - python file_handler.py {{ SRC_DIR }} {{ PREFIX }} {{ PKG_NAME }} {{ MODULE_NAME }} {{ LIB_NAME }}
@@ -22,7 +23,7 @@ build:
 
 requirements:
   build:
-    - python >=3.6
+    - python {{ python }}
     - nanopb ==0.3.9.8
     - path-helpers
     - conda-helpers
@@ -34,6 +35,8 @@ outputs:
     noarch: generic
     files:
       - share
+    run:
+      - nanopb ==0.3.9.8
   - name: {{ PKG_NAME }}
     noarch: python
     files:
@@ -48,9 +51,9 @@ outputs:
         - platformio-helpers
         - pip
 
-    test:
-      imports:
-        - {{ MODULE_NAME }}
+test:
+  imports:
+    - {{ MODULE_NAME }}
 
 about:
   home: https://github.com/sci-bots/nanopb-helpers
