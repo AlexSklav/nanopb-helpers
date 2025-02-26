@@ -14,7 +14,10 @@ def transfer(**kwargs) -> None:
     source_dir = path(source_dir).joinpath('lib', lib_name)
     install_dir = pioh.conda_arduino_include_path().joinpath(lib_name)
     for file in source_dir.walkfiles():
+        if file.name == '.DS_Store':
+            continue
         dest = install_dir.joinpath(file.relpathto(source_dir))
+        dest.parent.makedirs_p()
         file.copy2(dest)
         print(f"Copied '{file.name}' to '{dest}'")
 

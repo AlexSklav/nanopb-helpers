@@ -105,19 +105,12 @@ def compile_nanopb(proto_path: path, options_file: Optional[str] = None) -> Dict
     proto_path = path(proto_path)
     tempdir = path(tempfile.mkdtemp(prefix='nanopb'))
     cwd = os.getcwd()
-
-    nanopb_spec = importlib.util.find_spec("nanopb")
-    if nanopb_spec is not None and nanopb_spec.origin is not None:
-        nanopb_path = os.path.dirname(nanopb_spec.origin)
-        protoc_path = os.path.join(nanopb_path, "generator", "protoc")
-    else:
-        raise FileNotFoundError("Nanopb package not found")
     try:
         os.chdir(tempdir)
-        protoc = f'{protoc_path}{get_exe_postfix()}'
-        proto_pb_path = str(tempdir.joinpath(proto_path.namebase + ".pb"))
-        check_call([protoc, f'-I{str(proto_path.parent)}', str(proto_path), f'-o{proto_pb_path}'])
-        nanopb_gen_cmd = [sys.executable, '-m', 'nanopb_generator', proto_pb_path]
+        protoc = f'protoc{get_exe_postfix()}'
+        proto_pb_path = tempdir.joinpath(proto_path.namebase + ".pb")
+        check_call([protoc, f'-I{str(proto_path.parent)}', f'{proto_path}', f'-o{proto_pb_path}'])
+        nanopb_gen_cmd = ['nanopb_generator', f'-I{proto_path.parent}', f'{proto_path.name}', f'-D{proto_pb_path.parent}']
         if options_file is not None:
             nanopb_gen_cmd += [f'-f{options_file}']
         check_call(nanopb_gen_cmd)
@@ -143,15 +136,9 @@ def compile_pb(proto_path: path) -> Dict:
     proto_path = path(proto_path)
     tempdir = path(tempfile.mkdtemp(prefix='nanopb'))
     result = {}
-    nanopb_spec = importlib.util.find_spec("nanopb")
-    if nanopb_spec is not None and nanopb_spec.origin is not None:
-        nanopb_path = os.path.dirname(nanopb_spec.origin)
-        protoc_path = os.path.join(nanopb_path, "generator", "protoc")
-    else:
-        raise FileNotFoundError("Nanopb package not found")
     try:
-        protoc = f'{protoc_path}{get_exe_postfix()}'
-        check_call([protoc, f'-I{proto_path.parent}', proto_path,
+        protoc = f'protoc{get_exe_postfix()}'
+        check_call([protoc, f'-I{proto_path.parent}', f'{proto_path}',
                     f'--python_out={tempdir}', f'--cpp_out={tempdir}'])
         result['python'] = tempdir.files('*.py')[0].text()
         result['cpp'] = {'header': tempdir.files('*.h*')[0].text(),
