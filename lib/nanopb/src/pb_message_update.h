@@ -21,8 +21,8 @@ struct MessageUpdateBase {
   };
 
   struct Parent {
-    const pb_field_t *start;  /* Start of the pb_field_t array */
-    const pb_field_t *pos;  /* Current position of the iterator */
+    const pb_msgdesc_t *descriptor;  /* Start of the pb_msgdesc_t */
+    pb_size_t tag;                   /* Tag of the field */
   };
 
   Parent parents[5];
@@ -44,7 +44,7 @@ private:
 
   template <typename Iter>
   pb_size_t extract_count(Iter &iter) {
-    pb_type_t type = iter.pos->type;
+    pb_type_t type = iter.type;
     pb_size_t count = 0;
 
     /* Load the count of the data for the current field in the source
@@ -80,8 +80,7 @@ private:
     do {
       pb_type_t type;
       pb_size_t count = 0;
-      pb_size_t target_count = 0;
-      type = iter.source.pos->type;
+      type = iter.source.type;
 
       /* TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO */
       /* TODO Define behaviour for non-static types, e.g., repeated. */
@@ -93,41 +92,35 @@ private:
 
       if (PB_ATYPE(type) == PB_ATYPE_STATIC) {
         count = extract_count(iter.source);
-        target_count = extract_count(iter.target);
 
-        int size = -10;
         /* If the `process_field` method returns `true`... */
         if (process_field(iter, count)) {
           /*  - Copy data from source structure to target structure. */
           memcpy(iter.target.pData, iter.source.pData,
-                 iter.source.pos->data_size);
+                 iter.source.data_size);
           /*  - Update the `has_` field or the `_count` field of the target
            *    structure. */
           if (PB_HTYPE(type) == PB_HTYPE_OPTIONAL) {
             *(bool*)iter.target.pSize = *(bool*)iter.source.pSize;
-            size = *(bool*)iter.target.pSize;
           } else if (PB_HTYPE(type) == PB_HTYPE_REPEATED) {
             *(pb_size_t*)iter.target.pSize = *(pb_size_t*)iter.source.pSize;
-            size = *(pb_size_t*)iter.target.pSize;
-          } else {
-            size = -20;
           }
         }
-        LOG(">> source_count=%d, target_count=%d (size: %d, LTYPE=%d)\n",
-               count, target_count, size, PB_LTYPE(iter.source.pos->type));
+        LOG(">> source_count=%d, LTYPE=%d\n",
+               count, PB_LTYPE(iter.source.type));
 
         /* If the current field is a sub-message, push parent message onto
          * parent stack and process sub-message fields. */
-        if ((count > 0) && (PB_LTYPE(iter.source.pos->type) ==
+        if ((count > 0) && (PB_LTYPE(iter.source.type) ==
                             PB_LTYPE_SUBMESSAGE)) {
           /*  - Mark sub-message types as present if they are present in the
            *    source message. */
           *(bool*)iter.target.pSize = *(bool*)iter.source.pSize;
 
-          parents[parent_count].pos = iter.source.pos;
-          parents[parent_count].start = iter.source.start;
+          parents[parent_count].descriptor = iter.source.descriptor;
+          parents[parent_count].tag = iter.source.tag;
           parent_count++;
-          for (long unsigned int i = 0; i < count; i++) {
+          for (pb_size_t i = 0; i < count; i++) {
             /* For repeated types, the count may be greater than one.  In such
              * cases, we need to iterate through each repeated sub-message to
              * handle each one separately.
@@ -137,16 +130,15 @@ private:
              * involving a `void` pointer.
              *
              * [1]: http://stackoverflow.com/questions/26755638/warning-pointer-of-type-void-used-in-arithmetic#26756220 */
-            pb_size_t offset = i * iter.source.pos->data_size;
-            __update__((Fields)iter.source.pos->ptr,
+            pb_size_t offset = i * iter.source.data_size;
+            __update__(iter.source.submsg_desc,
                        ((uint8_t *)iter.source.pData) + offset,
                        ((uint8_t *)iter.target.pData) + offset);
           }
           --parent_count;
         }
         count = extract_count(iter.source);
-        target_count = extract_count(iter.target);
-        LOG("<< source_count=%d, target_count=%d\n", count, target_count);
+        LOG("<< source_count=%d\n", count);
       } else {
         LOG("Unrecognized PB_ATYPE=%d\n", PB_ATYPE(type));
       }
@@ -161,25 +153,25 @@ struct MessageUpdate : public MessageUpdateBase {
   MessageUpdate() : MessageUpdateBase() {}
 
   virtual bool process_field(IterPair &iter, pb_size_t count) {
-    for (unsigned int i = 0; i < parent_count; i++) LOG("  ");
+    for (pb_size_t i = 0; i < parent_count; i++) LOG("  ");
     LOG("=========================================\n");
-    for (unsigned int i = 0; i < parent_count; i++) LOG("  ");
+    for (pb_size_t i = 0; i < parent_count; i++) LOG("  ");
     if (parent_count > 0) {
-      for (unsigned int i = 0; i < parent_count; i++) {
-        LOG("> %d ", parents[i].pos->tag);
+      for (pb_size_t i = 0; i < parent_count; i++) {
+        LOG("> %d ", parents[i].tag);
       }
       LOG("\n");
     }
-    for (unsigned int i = 0; i < parent_count; i++) LOG("  ");
-    LOG("tag=%d start=%p pos=%p count=%d ltype=%x atype=%x htype=%x data_size=%d \n",
-           iter.source.pos->tag, iter.source.start, iter.source.pos, count,
-           PB_LTYPE(iter.source.pos->type), PB_ATYPE(iter.source.pos->type),
-           PB_HTYPE(iter.source.pos->type), iter.source.pos->data_size);
-    for (unsigned int i = 0; i < parent_count; i++) LOG("  ");
+    for (pb_size_t i = 0; i < parent_count; i++) LOG("  ");
+    LOG("tag=%d descriptor=%p count=%d ltype=%x atype=%x htype=%x data_size=%d \n",
+           iter.source.tag, iter.source.descriptor, count,
+           PB_LTYPE(iter.source.type), PB_ATYPE(iter.source.type),
+           PB_HTYPE(iter.source.type), iter.source.data_size);
+    for (pb_size_t i = 0; i < parent_count; i++) LOG("  ");
     LOG("-----------------------------------------");
 
     bool trigger_copy = false;
-    if (PB_LTYPE(iter.source.pos->type) != PB_LTYPE_SUBMESSAGE) {
+    if (PB_LTYPE(iter.source.type) != PB_LTYPE_SUBMESSAGE) {
       /* Only copy all data for field if this is not a sub-message type, since
        * we want to handle sub-message fields one-by-one. */
       trigger_copy = (count > 0);

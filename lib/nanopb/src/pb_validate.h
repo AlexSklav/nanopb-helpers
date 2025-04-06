@@ -28,14 +28,14 @@ struct ScalarFieldValidator : public FieldValidatorBase {
       LOG("  Level=%d != parent_count + 1=%d\n", Level, parent_count + 1);
       return false;
     }
-    unsigned int i;
+    size_t i;
     for (i = 0; i < parent_count; i++) {
-      if (parents[i].pos->tag != tags_[i]) {
-        LOG("  parent_tag=%d != tags_=%d\n", parents[i].pos->tag, tags_[i]);
+      if (parents[i].tag != tags_[i]) {
+        LOG("  parent_tag=%d != tags_=%d\n", parents[i].tag, tags_[i]);
         return false;
       }
     }
-    if (tags_[i] != iter.pos->tag) { return false; }
+    if (tags_[i] != iter.tag) { return false; }
     LOG("  match\n");
     return true;
   }
@@ -60,11 +60,11 @@ struct MessageValidator : public MessageUpdateBase {
   FieldValidatorBase *validators[ValidatorCount];
 
   MessageValidator<ValidatorCount> () : MessageUpdateBase() {
-    for (int i = 0; i < ValidatorCount; i++) { validators[i] = NULL; }
+    for (uint8_t i = 0; i < ValidatorCount; i++) { validators[i] = NULL; }
   }
 
   virtual uint8_t register_validator(FieldValidatorBase &validator) {
-    for (int i = 0; i < ValidatorCount; i++) {
+    for (uint8_t i = 0; i < ValidatorCount; i++) {
       if (validators[i] == NULL) {
         validators[i] = &validator;
         return i;
@@ -77,39 +77,39 @@ struct MessageValidator : public MessageUpdateBase {
     LOG(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
     bool trigger_copy = false;
     bool has_validator = false;
-    for (int i = 0; i < ValidatorCount; i++) {
+    for (uint8_t i = 0; i < ValidatorCount; i++) {
       /* If `count==0` field is not set in source message. */
       if (count > 0 && validators[i] != NULL &&
           validators[i]->match(parents, parent_count, iter.source)) {
         LOG(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
         trigger_copy = validators[i]->__validate__(iter.source.pData,
                                                    iter.target.pData,
-                                                   iter.source.pos->data_size);
+                                                   iter.source.data_size);
         has_validator = true;
       }
     }
-    if (!has_validator && (PB_LTYPE(iter.source.pos->type)
+    if (!has_validator && (PB_LTYPE(iter.source.type)
                            != PB_LTYPE_SUBMESSAGE)) {
       /* Only copy all data for field if this is not a sub-message type, since
        * we want to handle sub-message fields one-by-one. */
       trigger_copy = (count > 0);
     }
 #ifdef LOGGING
-    for (int i = 0; i < parent_count; i++) LOG("  ");
+    for (pb_size_t i = 0; i < parent_count; i++) LOG("  ");
     LOG("=========================================\n");
-    for (int i = 0; i < parent_count; i++) LOG("  ");
+    for (pb_size_t i = 0; i < parent_count; i++) LOG("  ");
     if (parent_count > 0) {
-      for (int i = 0; i < parent_count; i++) {
-        LOG("> %d ", parents[i].pos->tag);
+      for (pb_size_t i = 0; i < parent_count; i++) {
+        LOG("> %d ", parents[i].tag);
       }
       LOG("\n");
     }
-    for (int i = 0; i < parent_count; i++) LOG("  ");
-    LOG("tag=%d start=%p pos=%p count=%d ltype=%x atype=%x htype=%x data_size=%d \n",
-        iter.source.pos->tag, iter.source.start, iter.source.pos, count,
-        PB_LTYPE(iter.source.pos->type), PB_ATYPE(iter.source.pos->type),
-        PB_HTYPE(iter.source.pos->type), iter.source.pos->data_size);
-    for (int i = 0; i < parent_count; i++) LOG("  ");
+    for (pb_size_t i = 0; i < parent_count; i++) LOG("  ");
+    LOG("tag=%d descriptor=%p count=%d ltype=%x atype=%x htype=%x data_size=%d \n",
+        iter.source.tag, iter.source.descriptor, count,
+        PB_LTYPE(iter.source.type), PB_ATYPE(iter.source.type),
+        PB_HTYPE(iter.source.type), iter.source.data_size);
+    for (pb_size_t i = 0; i < parent_count; i++) LOG("  ");
     LOG("-----------------------------------------");
 
 #endif

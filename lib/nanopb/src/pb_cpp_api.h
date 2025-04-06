@@ -3,37 +3,40 @@
 
 #include <pb_decode.h>
 #include <pb_encode.h>
+#include "nanopb.h"
 
 
 namespace nanopb {
 
 template <typename Obj, typename Fields>
-inline UInt8Array serialize_to_array(Obj &obj, Fields const &fields, UInt8Array output) {
+inline UInt8Array serialize_to_array(Obj &obj, const Fields &fields,
+                                     UInt8Array output) {
   pb_ostream_t ostream = pb_ostream_from_buffer(output.data, output.length);
   bool ok = pb_encode(&ostream, fields, &obj);
   if (ok) {
     output.length = ostream.bytes_written;
   } else {
     output.length = 0;
-    output.data = nullptr;
+    output.data = NULL;
   }
   return output;
 }
 
 
 template <typename Fields, typename Obj>
-inline bool decode_from_array(UInt8Array input, Fields const &fields, Obj &obj, bool init_default=false) {
+inline bool decode_from_array(UInt8Array input, const Fields &fields, Obj &obj,
+                              bool init_default=false) {
   pb_istream_t istream = pb_istream_from_buffer(input.data, input.length);
   if (init_default) {
     return pb_decode(&istream, fields, &obj);
   } else {
-    return pb_decode_noinit(&istream, fields, &obj);
+    return pb_decode_ex(&istream, fields, &obj, PB_DECODE_NOINIT);
   }
 }
 
 
 template <typename Msg>
-inline Msg get_pb_default(const pb_field_t *fields) {
+inline Msg get_pb_default(const pb_msgdesc_t *fields) {
   /* Use nanopb decode with `init_default` set to `true` as a workaround to
    * avoid needing to initialize the object (i.e., `_`) using the
    * `<message>_init_default` macro.
@@ -54,17 +57,17 @@ public:
   Msg _;
   Validator validator_;
   UInt8Array buffer_;
-  const pb_field_t *fields_;
+  const pb_msgdesc_t *fields_;
 
-  Message(const pb_field_t *fields) : fields_(fields) {}
+  Message(const pb_msgdesc_t *fields) : fields_(fields) {}
 
-  Message(const pb_field_t *fields, size_t buffer_size, uint8_t *buffer)
+  Message(const pb_msgdesc_t *fields, size_t buffer_size, uint8_t *buffer)
     : fields_(fields) {
     buffer_.length = buffer_size;
     buffer_.data = buffer;
   }
 
-  Message(const pb_field_t *fields, UInt8Array buffer)
+  Message(const pb_msgdesc_t *fields, UInt8Array buffer)
     : fields_(fields), buffer_(buffer) {}
 
   void set_buffer(UInt8Array buffer) { buffer_ = buffer; }
