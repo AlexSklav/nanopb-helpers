@@ -8,40 +8,71 @@
 
 namespace nanopb {
 
-inline UInt8Array eeprom_to_array(uint16_t address, UInt8Array output) {
-  uint16_t payload_size;
+inline UInt8Array eeprom_to_array(uint16_t eeprom_addr, UInt8Array output) {
+  uint16_t payload_size = 0;
 
-  eeprom_read_block((void*)&payload_size, (const void*)(uintptr_t)address, sizeof(uint16_t));
+  // Read 2 bytes from EEPROM at the start address to get the payload size
+  eeprom_read_block(
+    reinterpret_cast<void*>(&payload_size),
+    reinterpret_cast<const void*>(static_cast<uintptr_t>(eeprom_addr)),
+    sizeof(payload_size)
+  );
+
+  // Check if the provided buffer is large enough
   if (output.length < payload_size) {
-    output.length = 0;
+    // Not enough space — clear output to signal failure
     output.data = NULL;
+    output.length = 0;
   } else {
-    eeprom_read_block((void*)output.data, (const void*)(uintptr_t)(address + 2), payload_size);
+    // Read payload from EEPROM (right after the 2-byte size field)
+    eeprom_read_block(
+      reinterpret_cast<void*>(output.data),
+      reinterpret_cast<const void*>(static_cast<uintptr_t>(eeprom_addr + sizeof(uint16_t))),
+      payload_size
+    );
     output.length = payload_size;
   }
+
   return output;
 }
 
 
-inline void array_to_eeprom(uint16_t address, UInt8Array data) {
+inline void array_to_eeprom(uint16_t eeprom_addr, UInt8Array data) {
+  // Disable interrupts during EEPROM write to prevent corruption
   cli();
-  eeprom_update_block((void*)&data.length, (void*)(uintptr_t)address, sizeof(uint16_t));
-  eeprom_update_block((void*)data.data, (void*)(uintptr_t)(address + 2), data.length);
+
+  // Write the payload size (2 bytes) at the start address
+  eeprom_update_block(
+    reinterpret_cast<void*>(&data.length),
+    reinterpret_cast<void*>(static_cast<uintptr_t>(eeprom_addr)),
+    sizeof(uint16_t)
+  );
+
+  // Write the actual payload data right after the size
+  eeprom_update_block(
+    reinterpret_cast<void*>(data.data),
+    reinterpret_cast<void*>(static_cast<uintptr_t>(eeprom_addr + sizeof(uint16_t))),
+    data.length
+  );
+
+  // Re-enable interrupts
   sei();
 }
 
 
 template <typename Obj, typename Fields>
-bool decode_obj_from_eeprom(uint16_t address, Obj &obj,
-                            Fields const &fields, UInt8Array pb_buffer) {
-  pb_buffer = eeprom_to_array(address, pb_buffer);
-  bool ok;
+bool decode_obj_from_eeprom(uint16_t eeprom_addr, Obj &obj,
+                          Fields const &fields, UInt8Array pb_buffer) {
+  // Try to read the serialized message from EEPROM
+  pb_buffer = eeprom_to_array(eeprom_addr, pb_buffer);
+
+  // Check if reading from EEPROM was successful
   if (pb_buffer.data == NULL) {
-    ok = false;
-  } else {
-    ok = decode_from_array(pb_buffer, fields, obj);
+    return false;
   }
-  return ok;
+
+  // Attempt to decode the buffer into the object
+  return decode_from_array(pb_buffer, fields, obj);
 }
 
 
@@ -60,20 +91,27 @@ public:
 
   EepromMessage(const pb_msgdesc_t *fields, size_t buffer_size, uint8_t *buffer)
     : base_type(fields, buffer_size, buffer) {}
+
   EepromMessage(const pb_msgdesc_t *fields, UInt8Array buffer)
     : base_type(fields, buffer) {}
 
-  void load(uint8_t address=0) {
-    if (!decode_obj_from_eeprom(address, _, fields_, buffer_)) {
-      /* Message could not be loaded from EEPROM; reset obj. */
+  void load(uint8_t eeprom_addr=0) {
+    // Try to load message from EEPROM at the specified address
+    if (!decode_obj_from_eeprom(eeprom_addr, _, fields_, buffer_)) {
+      // Message could not be loaded from EEPROM; reset to defaults
       reset();
     }
+    // Always validate the message after loading (or resetting)
     validate();
   }
-  void save(uint8_t address=0) {
+
+  void save(uint8_t eeprom_addr=0) {
+    // Serialize the message to the buffer
     UInt8Array serialized = serialize();
+
+    // If serialization was successful, save to EEPROM
     if (serialized.data != NULL) {
-      array_to_eeprom(address, serialized);
+      array_to_eeprom(eeprom_addr, serialized);
     }
   }
 };
